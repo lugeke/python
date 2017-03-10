@@ -12,12 +12,16 @@ xpaths = [r'//*[@id="js_main_nav_cloud"]',
 r'//*[@id="js_cloud_nav"]/div[1]/div/div[1]/a',
 r'//*[@id="js_data_list"]/div/ul/li[2]/span[1]/em/a[1]',
 r'//*[@id="js_data_list"]/div/ul/li[3]/span[1]/em/a[1]',
-r'//*[@id="js_data_list"]/div/ul/li[21]/span[1]/em/a[1]',
-r'//*[@id="js_data_list"]/div/ul/li[1]/span[1]/em/a[1]'
+r'//*[@id="js_data_list"]/div/ul/li[7]/span[1]/em/a[1]'
 ]
 
-frames = ['', '', 'wangpan','','','']
+frames = ['', '', 'wangpan','','']
 for i in range(0, len(xpaths)):
     if frames[i] != '' : driver.switch_to_frame('wangpan')
     driver.find_element_by_xpath(xpaths[i]).click()
     time.sleep(3)
+
+for i in range(1, 14):
+    xpath = r'//*[@id="js_data_list"]/div/ul/li[%d]/span[1]/em/a[1]'%(i)
+    driver.find_element_by_xpath(xpath).click()
+    time.sleep(1)
