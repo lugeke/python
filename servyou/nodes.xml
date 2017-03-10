@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="GBK"?>
+<Nodes>
+	<node>
+		<id>EP_SERVYOUWEB_XCS</id>
+		<comment>学财税</comment>
+		<displayname>学财税</displayname>
+		<alwaysdisplay>1</alwaysdisplay>
+		<execprop>
+			<!-- 0:执行 Onclick 事件； 1：执行 OnSelected 事件-->
+			<!-- 所属系统类型 0=子系统 1=第三方系统 2=web系统 -->
+			<eventtype>1</eventtype>
+			<apptype>0</apptype>
+			<appcode>97</appcode>
+			<execmode>1</execmode>
+			<params>
+				<param>
+					<name>funccode</name>
+					<value>97001-00-21</value>
+				</param>
+				<param>
+					<name>HideMenu</name>
+					<value>1</value>
+				</param>
+			</params>
+		</execprop> 
+		<displayindex>25</displayindex>
+		<icon>
+			<normal>Images\Navbar\btn5_1.png</normal>
+			<focus>Images\Navbar\btn5_2.png</focus>
+			<selected>Images\Navbar\btn5_3.png</selected>
+			<disable/>
+			<width>65</width>
+			<height>65</height>
+			<strentch>0</strentch>
+			<tile>0</tile>
+			<visible>0</visible>
+			<transparent>1</transparent>
+		</icon>
+	</node>
+
+</Nodes>

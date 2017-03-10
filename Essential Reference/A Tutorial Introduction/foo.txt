@@ -1,0 +1,7 @@
+f = open("foo.txt") # Returns a file object
+line = f.readline() # Invokes readline() method on file
+while line:
+print line, # trailing ',' omits newline character
+# print(line,end='') # Use in Python 3
+line = f.readline()
+f.close()
