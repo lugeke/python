@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 url = 'https://www.seedmm.com/star/n4r'
 
 
@@ -11,20 +12,22 @@ def get_movie_links(url, end):
             yield tag['href']
 
 
-def get_magnets(link):
-    page = requests.get(link).text
+# https://btso.pw/search/MEYD-063 ->
+def toMagnets(url):
+    response = requests.get(url)
+    page = response.text
     soup = BeautifulSoup(page, 'html.parser')
-    soup._select_debug = True
-    trs = soup.select('table#magnet-table > tr')
     magnets = []
-    for tr in trs:
-        magnet = tr.select('td:nth-of-type(1) a').get('href')
-        size = tr.select('td:nth-of-type(2) a').get_text()
+    for a in soup.find_all('a', href=re.compile('https://btso.pw/magnet/detail/hash/')):
+        magnet = a['href'].split('/')[-1]
+        size = a.findChildren('div')[1].text
         magnets.append((magnet, size))
     return magnets
 
 
+print(toMagnets('https://btso.pw/search/MEYD-063'))
+
 # for movie_link in get_movie_links(url, 2):
 #     print(movie_link)
-for magnet in get_magnets('https://www.seedmm.com/MEYD-262'):
-    print(magnet)
+# for magnet in get_magnets('https://www.seedmm.com/MEYD-262'):
+#     print(magnet)
