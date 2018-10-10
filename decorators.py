@@ -1,8 +1,8 @@
 import time
-import functools
+from functools import wraps
 
 def clock(func):
-	@functools.wraps(func)
+	@wraps(func)
 	def clocked(*args, **kwargs):
 		t0 = time.time()
 		result = func(*args, **kwargs)
