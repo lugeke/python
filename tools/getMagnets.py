@@ -2,20 +2,17 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from collections import namedtuple
-import urllib
-# url => html => content
-url = 'https://www.bthuahua.net/index.php?r=files%2Findex&kw=Riley+Reyes+rarbg+1080p&page={}'
-# url = 'https://bt2.bt87.cc/index.php?r=files%2Findex&kw=Nina+Skye+rarbg+1080p&page={}'
+
+# html => content
+url = 'https://www.bthuahua.net/index.php'
 
 MagnetURI = namedtuple('MagnetURI', ['name', 'hashcode', 'size'])
 
-def url_generator(url, start=1, end=100):
-    for i in range(start, end+1):
-        yield url.format(i)
-
-def html_generator(urls):
-    for url in urls:
-        yield requests.get(url).text
+def html_generator(url, start=1, end=100):
+    kw = 'Riley Reyes rarbg 1080p'
+    for p in range(start, end+1):
+        params = {'r': 'files/index', 'kw': kw, 'page': p}
+        yield requests.get(url, params=params).text
 
 def content_generator(htmls):
     for h in htmls:
@@ -29,10 +26,8 @@ def content_generator(htmls):
             magnet = MagnetURI(name, hashcode, size)
             yield magnet
 
-urls = url_generator(url)
-htmls = html_generator(urls)
+htmls = html_generator(url)
 contents = content_generator(htmls)
-
 
 for m in contents:
     print(m.hashcode)
