@@ -1,37 +1,38 @@
 import concurrent.futures
-import json
 import logging
 import os
-import re
 import time
 from queue import Queue
 
 from selenium import webdriver
 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--headless')
+# chrome_options.add_argument('--headless')
 # chrome_options.add_argument('--disable-gpu')
 driver = webdriver.Chrome(executable_path=r'/Applications/chromedriver', options=chrome_options)  
 
-logging.basicConfig( format='%(asctime)s %(message)s', level=logging.INFO)
+logging.basicConfig(filename='upload.log', format='%(asctime)s %(message)s', level=logging.INFO)
 queue = Queue()
 
 
 movies_ext = ('.mp4', '.wmv', '.mkv', )
 
-def scan_Dir(dir_Path):
-    filenameSet = set() 
+
+def scan_dir(dir_path):
+    filename_set = set()
     while True:
-        files = [f for f in os.listdir(dir_Path) if os.path.isfile(os.path.join(dir_Path, f)) and not f.startswith('.')]
+        files = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f)) and not f.startswith('.')]
         movie_files = [f for f in files if f.endswith(movies_ext)]
 
         for f in movie_files:
-            if f in filenameSet: continue
-            filenameSet.add(f)
-            cover_file = os.path.join(dir_Path, f'{os.path.splitext(f)[0]}.jpg')
-            if not os.path.exists(cover_file): cover_file = ''
+            if f in filename_set:
+                continue
+            filename_set.add(f)
+            cover_file = os.path.join(dir_path, f'{os.path.splitext(f)[0]}.jpg')
+            if not os.path.exists(cover_file):
+                cover_file = ''
             queue.put({
-                'movieFile': os.path.join(dir_Path, f),
+                'movieFile': os.path.join(dir_path, f),
                 'coverFile': cover_file,
             })
             logging.info(f'queue put {f}')
@@ -40,17 +41,16 @@ def scan_Dir(dir_Path):
         time.sleep(60)
 
 
-def runThreadPool(dirPath):
+def run_thread_pool(dir_path):
     logging.info('runThreadPool')
     # We can use a with statement to ensure threads are cleaned up promptly
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         # Start the load operations and mark each future with its index
-        executor.submit(scan_Dir, dirPath)
-        executor.submit(fillFormAndUplaod)
+        executor.submit(scan_dir, dir_path)
+        executor.submit(fill_form_upload)
 
 
-
-def loginToUpload():
+def login_to_upload():
     driver.get('https://avgle.com/upload/video') 
 
     time.sleep(3)
@@ -60,42 +60,44 @@ def loginToUpload():
     time.sleep(2)
 
 
-def fillFormAndUplaod():
-    lastUploadFile = ''
+def fill_form_upload():
+    last_upload_file = ''
     while True:
         try:
-            if driver.find_element_by_id('upload_video_submit').get_attribute('value')=='I declare this is not Child Porn. Upload':
-                if os.path.exists(lastUploadFile):
-                    # os.remove(lastUploadFile)
-                    logging.info(f'end upload {lastUploadFile}')
-                fileInfo = queue.get()
-                movieFile = fileInfo['movieFile']
-                coverFile = fileInfo['coverFile']
-                logging.info(f'begin upload {movieFile}')
-                lastUploadFile = movieFile
-                title = os.path.basename(movieFile)[:-4]
-                tags = os.path.basename(os.path.dirname(movieFile))
+            if driver.find_element_by_id('upload_video_submit').get_attribute('value') == \
+                    'I declare this is not Child Porn. Upload':
+                if os.path.exists(last_upload_file):
+                    # os.remove(last_upload_file)
+                    logging.info(f'end upload {last_upload_file}')
+                file_info = queue.get()
+                movie_file = file_info['movie_file']
+                cover_file = file_info['cover_file']
+                logging.info(f'begin upload {movie_file}')
+                last_upload_file = movie_file
+                title = os.path.basename(movie_file)[:-4]
+                tags = os.path.basename(os.path.dirname(movie_file))
                 driver.find_element_by_id('upload_video_title').send_keys(title)
                 driver.find_element_by_id('upload_video_keywords').send_keys(tags)
                 # driver.find_element_by_id('upload_video_category').selectedIndex = 19 //15
                 driver.execute_script("document.getElementById('upload_video_category').selectedIndex = 15")
-
                 driver.find_element_by_id('upload_video_privacy_private').click()
-                driver.find_element_by_id('upload_video_file').send_keys(movieFile)
-                if coverFile:
-                    driver.find_element_by_id('upload_video_thumb').send_keys(coverFile)
+                driver.find_element_by_id('upload_video_password').send_keys('riorio')
+                driver.find_element_by_id('upload_video_file').send_keys(movie_file)
+                if cover_file:
+                    driver.find_element_by_id('upload_video_thumb').send_keys(cover_file)
                 driver.find_element_by_id('upload_video_submit').click()
             else:
                 time.sleep(60)
                 logging.info('-')
         except Exception as e:
-            print(e)
+            logging.info(f'error {e}')
             driver.quit()
+            login_to_upload()
 
 
 if __name__ == '__main__': 
     dirPath = r'/Volumes/tv/Abstract.The.Art.of.Design.S01.mp4/rio' 
-    loginToUpload()
-    runThreadPool(dirPath)
+    login_to_upload()
+    run_thread_pool(dirPath)
     driver.quit()
     logging.info('complete')
