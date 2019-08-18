@@ -41,19 +41,23 @@ class mangaGenerator:
 
     @abc.abstractmethod
     def parse_table(self):
-        """parse manga table link, return links[slice]"""
+        """parse manga table link, yield page title and pairs of (chapter name, chapter link)"""
         
     @abc.abstractmethod
     def parse_content(self, content):
-        """parse singe content, return tuples of (image, file_path)"""
+        """parse chapter link, yield tuples of (image url, file path)"""
 
 
     def __iter__(self):
-        for name, content in self.parse_table():
-            image_dir = os.path.join(self.save_dir, name)
+        chapters = self.parse_table()
+        title = next(chapters)
+        image_dir = os.path.join(self.save_dir, title)
+        os.makedirs(image_dir, exist_ok = True)
+        for name, link in chapters:
+            image_dir = os.path.join(self.save_dir, title, name)
             os.makedirs(image_dir, exist_ok = True)
 
-            for index, image in enumerate(self.parse_content(content), 1):
+            for index, image in enumerate(self.parse_content(link), 1):
                 # get suffix .jpg or .jpeg
                 suffix = image.split(".")[-1]
                 file_name = os.path.join(image_dir, '{:03d}.{}'.format(index, suffix))
@@ -67,6 +71,8 @@ class BbdmMG(mangaGenerator):
         html = requests.get(self.url).text
         # html = requests.get('https://www.bbdmw.com/cartoon/58').text
         soup = BeautifulSoup(html, 'html.parser')
+        title = soup.find('h1').text
+        yield title
         links = soup.select('.detail-list-select a')[self.slice_]
         for l in links: 
             yield l.text, "{}/{}".format(get_domin(self.url), l['href'])
@@ -104,14 +110,16 @@ class HhdmMG(mangaGenerator):
         # driver.get('https://hhmh5.com/?act=list&aid=70')
         self.driver.get(self.url)
         time.sleep(2)
+        title = self.driver.find_element_by_tag_name('h2').text
         links = self.driver.find_elements_by_css_selector("ul#html_box a")[self.slice_]
         links = [(l.find_element_by_class_name('pull-left').text, l.get_attribute('href')) for l in links]
-        return links
+        yield title
+        yield from links
     
     def parse_content(self, content):
         # driver.get('https://hhmh5.com/style.html?act=style&aid=70&cid=14443')
         self.driver.get(content)
-        print('content', content)
+        # print('content', content)
         time.sleep(2)
         image  = self.driver.find_element_by_css_selector('img.lazy').get_attribute('data-original')
         # https://abc.yuyzf.com/files/80668/65265/2.jpg
@@ -124,16 +132,16 @@ class HhdmMG(mangaGenerator):
             yield '{}/{}.{}'.format(prefix, i, suffix)
         
 
-# start = 6
-# end = 32
+# start = 1
+# end = 1
 # download_images(BbdmMG(
 #     'https://www.bbdmw.com/cartoon/58',
-#     r'/Users/jiaheng/Downloads/漂亮乾姊姊',
+#     r'/Volumes/tv',
 #     slice(start-1, end)
 # ))
 
 
-start = 33
-end = 39
-with HhdmMG('https://hhmh5.com/?act=list&aid=70', r'/Users/jiaheng/Downloads/漂亮乾姊姊', slice(start-1, end)) as h:
+start = 2
+end = 61
+with HhdmMG('https://hhmh5.com/?act=list&aid=85', r'/Volumes/tv', slice(start-1, end)) as h:
     download_images(h)
